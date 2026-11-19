@@ -1,8 +1,9 @@
 import bcrypt from "bcryptjs";
 import { writeFileSync, mkdirSync } from "fs";
 import path from "path";
-import { insertUser, listUsers, replaceLedger, findUserByEmail } from "../src/lib/db";
+import { findUserByEmail, insertUser, listSheets, listUsers, setMeta } from "../src/lib/db";
 import { buildDemo } from "../src/lib/demo-data";
+import { addSheetFromUrl, syncAll } from "../src/lib/sheet-sync";
 
 const DEMO_PASSWORD = "Gluck-Demo-2026";
 const users = [
@@ -28,15 +29,16 @@ async function main() {
   }
   const { ledger, events } = buildDemo();
   const existing = listUsers();
-  if (force || !process.env.SKIP_LEDGER) {
-    const { getLedger } = await import("../src/lib/db");
-    if (force || !getLedger()) {
-      replaceLedger(ledger, events);
-      console.log("デモ台帳を保存しました", ledger.p.length, "現場", ledger.r.length, "行");
-    } else {
-      console.log("台帳は既にあるためそのままにしました。置き換えるときは npm run seed -- --force");
-    }
+  if (!listSheets().some((sheet) => sheet.spreadsheetId === "mock-2026-11")) {
+    addSheetFromUrl("https://docs.google.com/spreadsheets/d/mock-2026-11/edit", "2026-11");
   }
+  if (force) {
+    setMeta("ledger", "null");
+    setMeta("ledger:2026-11", "null");
+    setMeta("ledger:2026-10", "null");
+  }
+  const synced = await syncAll(true);
+  console.log("シートを同期しました", synced.message);
   const sampleDir = path.join(process.cwd(), "samples");
   mkdirSync(sampleDir, { recursive: true });
   writeFileSync(path.join(sampleDir, "demo-state.json"), JSON.stringify({ ledger, events }, null, 2));

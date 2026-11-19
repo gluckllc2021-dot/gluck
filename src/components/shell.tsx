@@ -35,7 +35,7 @@ function Logo() {
 export function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const ledgerState = useLedger();
-  const { ledger, events, date, region, project, setRegion, setProject, refreshedAt, link, user } = ledgerState;
+  const { ledger, events, date, region, project, setRegion, setProject, refreshedAt, sync, link, user } = ledgerState;
   const regions = useMemo(() => (ledger ? [...new Set(ledger.p.map((item) => String(item[1] || "地域未確認")))] : []), [ledger]);
   const projects = useMemo(() => {
     if (!ledger) return [];
@@ -93,7 +93,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
               ))}
             </select>
           </label>
-          <div className="px-2 text-sm text-neutral-400">更新: {refreshedAt ? timeJST(refreshedAt) : "--:--"}</div>
+          <div className="px-2 text-sm text-neutral-400">
+            更新: {sync?.at ? timeJST(new Date(sync.at)) : refreshedAt ? timeJST(refreshedAt) : "--:--"}
+            {sync ? <span className={sync.warningCount ? "ml-2 font-bold text-[#ffb067]" : "ml-2 text-neutral-500"}>{sync.message}</span> : null}
+          </div>
           <Link href={link("/alerts")} className="relative grid h-10 w-10 place-items-center rounded-md hover:bg-white/5" aria-label="アラート">
             <Bell className="h-5 w-5" />
             {alerts > 0 && <span className="absolute right-1 top-1 grid h-4 min-w-4 place-items-center rounded-full bg-[#ff6a00] px-1 text-[10px] font-bold text-black">{alerts}</span>}

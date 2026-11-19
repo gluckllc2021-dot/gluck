@@ -101,6 +101,7 @@ export function SiteDetail({ id }: { id: string }) {
                 <td className="px-3 py-2 font-bold">
                   {row.n}
                   {doubled.has(row.n.normalize("NFKC").replace(/\s+/g, "")) && <span className="ml-2 text-xs text-[#ffb067]">2現場</span>}
+                  {row.delta.includes("原本と台帳の訂正差") && <span className="ml-2 text-xs text-[#ff8a33]">差分あり</span>}
                 </td>
                 <td className="px-3 py-2">{companyOf(row)}</td>
                 <td className="px-3 py-2"><Status s={row.a.s} /></td>

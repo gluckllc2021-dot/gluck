@@ -6,6 +6,8 @@ import type { Ledger, ReviewEvent } from "@/lib/attendance";
 import { shiftDate as moveDate, todayJST } from "@/lib/utils";
 
 export type AppUser = { id: string; email: string; name: string; role: "admin" | "editor" | "viewer" };
+export type SyncInfo = { at: string | null; ok: boolean; message: string; warningCount: number };
+export type SheetAlert = { level: string; code: string; tab: string; project: string; message: string };
 
 type State = {
   user: AppUser | null;
@@ -16,6 +18,8 @@ type State = {
   loading: boolean;
   error: string;
   refreshedAt: Date | null;
+  sync: SyncInfo | null;
+  sheetAlerts: SheetAlert[];
   date: string;
   region: string;
   project: string;
@@ -51,6 +55,8 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [refreshedAt, setRefreshedAt] = useState<Date | null>(null);
+  const [sync, setSync] = useState<SyncInfo | null>(null);
+  const [sheetAlerts, setSheetAlerts] = useState<SheetAlert[]>([]);
   const holdRef = useRef(false);
   const requestId = useRef(0);
 
@@ -92,6 +98,8 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
       setRevision(body.sourceRevision || 0);
       setCanEdit(!!body.canEdit);
       setRefreshedAt(new Date());
+      setSync(body.sync || null);
+      setSheetAlerts(body.sheetAlerts || []);
       setError("");
     } catch (caught) {
       if (id === requestId.current) setError(caught instanceof Error ? caught.message : "台帳を読み込めませんでした。");
@@ -122,6 +130,8 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
       loading,
       error,
       refreshedAt,
+      sync,
+      sheetAlerts,
       date,
       region,
       project,
@@ -135,7 +145,7 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
       },
       link,
     }),
-    [user, ledger, events, revision, canEdit, loading, error, refreshedAt, date, region, project, replaceQuery, reload, link],
+    [user, ledger, events, revision, canEdit, loading, error, refreshedAt, sync, sheetAlerts, date, region, project, replaceQuery, reload, link],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

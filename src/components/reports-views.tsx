@@ -11,7 +11,7 @@ import { TrendChart } from "./trend-chart";
 import { dailySeries } from "@/lib/aggregate";
 
 export function AlertsView() {
-  const { ledger, events, date, region, project, link } = useLedger();
+  const { ledger, events, date, region, project, link, sheetAlerts } = useLedger();
   const model = useMemo(() => {
     if (!ledger) return null;
     const snap = core(ledger, events, date);
@@ -30,6 +30,13 @@ export function AlertsView() {
     <div className="mx-auto max-w-5xl px-3 py-3 lg:px-6">
       <MobilePageHeader title="アラート" />
       <h1 className="mb-4 hidden text-2xl font-black lg:block">未確認・不足・2現場出勤</h1>
+      {sheetAlerts.filter((alert) => alert.level === "alert").length > 0 && (
+        <Section title="シートの記入ミス">
+          {sheetAlerts.filter((alert) => alert.level === "alert").map((alert, index) => (
+            <div key={index} className="panel px-4 py-3 text-sm">{alert.message}</div>
+          ))}
+        </Section>
+      )}
       <Section title={`要員不足 ${model.short.length}現場`}>
         {model.short.map((site) => (
           <Link key={site.pi} href={link(`/sites/${site.pi}`)} className="panel flex items-center justify-between px-4 py-3">

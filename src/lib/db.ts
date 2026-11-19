@@ -127,7 +127,7 @@ export function userByToken(tokenHash: string) {
 
 export function getLedger(): Ledger | null {
   const raw = getMeta("ledger");
-  if (!raw) return null;
+  if (!raw || raw === "null") return null;
   return JSON.parse(raw) as Ledger;
 }
 
@@ -187,4 +187,83 @@ export function appendEvent(event: ReviewEvent, previousId: string | null, expec
     db.exec("ROLLBACK");
     throw error;
   }
+}
+
+export type StoredSheet = {
+  id: string;
+  spreadsheetId: string;
+  url: string;
+  title: string;
+  month: string;
+  mappings: { tab: string; projectName: string; region: string; include: boolean; discovered?: boolean }[];
+  lastSyncAt: string | null;
+  lastOk: boolean;
+  lastMessage: string;
+  lastWarningCount: number;
+};
+
+export function listSheets(): StoredSheet[] {
+  const raw = getMeta("sheets");
+  return raw ? (JSON.parse(raw) as StoredSheet[]) : [];
+}
+
+export function saveSheets(sheets: StoredSheet[]) {
+  setMeta("sheets", JSON.stringify(sheets));
+}
+
+export function syncIntervalMinutes() {
+  return Number(getMeta("syncIntervalMinutes") || "5");
+}
+
+export function setSyncIntervalMinutes(minutes: number) {
+  setMeta("syncIntervalMinutes", String(minutes));
+}
+
+export function getLedgerForDate(date: string): Ledger | null {
+  const month = date.slice(0, 7);
+  const raw = getMeta(`ledger:${month}`);
+  if (raw && raw !== "null") return JSON.parse(raw) as Ledger;
+  const current = getLedger();
+  if (current?.as.slice(0, 7) === month) return current;
+  return null;
+}
+
+export function saveMonthLedger(month: string, ledger: Ledger, primary = false) {
+  setMeta(`ledger:${month}`, JSON.stringify(ledger));
+  if (primary) setMeta("ledger", JSON.stringify(ledger));
+}
+
+export function replaceEventList(events: ReviewEvent[]) {
+  const db = database();
+  db.exec("BEGIN");
+  try {
+    db.exec("DELETE FROM events");
+    const insert = db.prepare("INSERT INTO events (id, day, at, payload) VALUES (?, ?, ?, ?)");
+    for (const event of events) insert.run(event.id, event.day, event.at, JSON.stringify(event));
+    setMeta("revision", String(Number(getMeta("revision") || "0") + 1));
+    db.exec("COMMIT");
+  } catch (error) {
+    db.exec("ROLLBACK");
+    throw error;
+  }
+}
+
+export type SyncState = { at: string | null; ok: boolean; message: string; warningCount: number };
+
+export function getSyncState(): SyncState {
+  const raw = getMeta("lastSync");
+  return raw ? (JSON.parse(raw) as SyncState) : { at: null, ok: true, message: "未同期", warningCount: 0 };
+}
+
+export function setSyncState(state: SyncState) {
+  setMeta("lastSync", JSON.stringify(state));
+}
+
+export function getSheetAlerts(): { level: string; code: string; tab: string; project: string; message: string }[] {
+  const raw = getMeta("sheetAlerts");
+  return raw ? (JSON.parse(raw) as { level: string; code: string; tab: string; project: string; message: string }[]) : [];
+}
+
+export function setSheetAlerts(alerts: { level: string; code: string; tab: string; project: string; message: string }[]) {
+  setMeta("sheetAlerts", JSON.stringify(alerts));
 }

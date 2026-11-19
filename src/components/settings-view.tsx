@@ -6,6 +6,7 @@ import { useLedger } from "./ledger-context";
 import { MobilePageHeader } from "./shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SheetAdmin } from "./sheet-admin";
 
 type Listed = { id: string; email: string; name: string; role: string };
 
@@ -67,6 +68,7 @@ export function SettingsView() {
       </section>
       {user?.role === "admin" && (
         <>
+          <SheetAdmin />
           <section className="panel mb-4 p-4">
             <h2 className="font-black">原本の取り込み</h2>
             <p className="mt-1 text-sm text-neutral-400">現行の state JSON、または「案件,地域,作業員,所属,単位,1,2,…」のCSVを読み込みます。作業員名はサーバーだけに保存されます。</p>
