@@ -4,7 +4,7 @@ import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAx
 
 export function ActivityBars({ data }: { data: { label: string; people: number; hours: number; imported: boolean }[] }) {
   return (
-    <div className="h-full min-h-[240px]">
+    <div className="h-full w-full min-w-0">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
           <CartesianGrid stroke="#2a2a2a" vertical={false} />

@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start -p 43123 -H 0.0.0.0",
     "lint": "eslint",
-    "test": "tsx --test src/lib/attendance.test.ts src/lib/sheet-parse.test.ts src/lib/activity.test.ts",
+    "test": "tsx --test src/lib/attendance.test.ts src/lib/sheet-parse.test.ts src/lib/activity.test.ts src/lib/day-view.test.ts",
     "seed": "tsx scripts/seed.ts",
     "user:create": "tsx scripts/create-user.ts"
   },

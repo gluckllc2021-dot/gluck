@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { canEdit } from "@/lib/auth";
-import { getLedgerForDate, getRevision, getSheetAlerts, getSyncState, listEvents } from "@/lib/db";
+import { getLedgerForDate, getRevision, getSheetAlerts, getSyncState, listEvents, listMonthLedgers } from "@/lib/db";
 import { guard } from "@/lib/guard";
 import { syncAll } from "@/lib/sheet-sync";
 import { todayJST } from "@/lib/utils";
@@ -13,6 +13,7 @@ export async function GET(req: Request) {
   const date = new URL(req.url).searchParams.get("date") || todayJST();
   return NextResponse.json({
     ledger: getLedgerForDate(date),
+    months: listMonthLedgers(date.slice(0, 4)),
     events: listEvents(),
     canEdit: canEdit(user.role),
     role: user.role,

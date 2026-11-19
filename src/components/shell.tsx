@@ -65,33 +65,33 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className={`flex min-h-dvh flex-col lg:h-dvh lg:overflow-hidden ${admin ? "bg-[#071a33]" : "bg-[#0e0e0e]"}`}>
-      <header className={`no-print hidden h-[60px] shrink-0 items-center gap-4 border-b px-4 lg:flex ${admin ? "border-white/10 bg-[#0b2545]" : "border-[#2a2a2a] bg-[#101010]"}`}>
+      <header className={`no-print hidden min-h-[56px] shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b px-3 py-1.5 lg:flex ${admin ? "border-white/10 bg-[#0b2545]" : "border-[#2a2a2a] bg-[#101010]"}`}>
         <Logo />
-        <div className="hazard-thin h-8 w-16 rounded-sm" />
-        <div className="text-[22px] font-black tracking-wide">出面確認台帳</div>
-        <div className="hazard-thin h-8 w-16 rounded-sm" />
-        <div className="ml-auto flex items-center gap-2">
-          <label className="flex shrink-0 items-center gap-2 whitespace-nowrap text-sm text-neutral-300">
-            <MapPin className="h-4 w-4 text-[#ff6a00]" />
-            地域
-            <select className="field h-9 w-[132px]" value={region} onChange={(event) => setRegion(event.target.value)} aria-label="地域">
+        <div className="hazard-thin hidden h-7 w-10 rounded-sm xl:block" />
+        <div className="text-lg font-black tracking-wide xl:text-[22px]">出面確認台帳</div>
+        <div className="hazard-thin hidden h-7 w-10 rounded-sm xl:block" />
+        <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2">
+          <label className="flex items-center gap-1 whitespace-nowrap text-sm text-neutral-300">
+            <MapPin className="h-4 w-4 shrink-0 text-[#ff6a00]" />
+            <span className="hidden xl:inline">地域</span>
+            <select className="field h-9 w-[112px] xl:w-[132px]" value={region} onChange={(event) => setRegion(event.target.value)} aria-label="地域">
               <option value="">すべて</option>
               {regions.map((item) => (
                 <option key={item}>{item}</option>
               ))}
             </select>
           </label>
-          <label className="flex shrink-0 items-center gap-2 whitespace-nowrap text-sm text-neutral-300">
-            <Building2 className="h-4 w-4 text-[#ff6a00]" />
-            現場
-            <select className="field h-9 w-[210px]" value={project} onChange={(event) => setProject(event.target.value)} aria-label="現場">
+          <label className="flex items-center gap-1 whitespace-nowrap text-sm text-neutral-300">
+            <Building2 className="h-4 w-4 shrink-0 text-[#ff6a00]" />
+            <span className="hidden xl:inline">現場</span>
+            <select className="field h-9 w-[148px] xl:w-[200px]" value={project} onChange={(event) => setProject(event.target.value)} aria-label="現場">
               <option value="">すべて</option>
               {projects.map((item) => (
                 <option key={item.index} value={item.index}>{item.name}</option>
               ))}
             </select>
           </label>
-          <div className="px-2 text-sm text-neutral-400">
+          <div className="hidden max-w-[240px] truncate px-1 text-sm text-neutral-400 min-[1400px]:block">
             更新: {sync?.at ? timeJST(new Date(sync.at)) : refreshedAt ? timeJST(refreshedAt) : "--:--"}
             {sync ? <span className={sync.warningCount ? "ml-2 font-bold text-[#ffb067]" : "ml-2 text-neutral-500"}>{sync.message}</span> : null}
           </div>
@@ -102,7 +102,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <MenuButton menu={menu} path={path} link={link} logout={logout} user={user?.name || ""} />
         </div>
       </header>
-      <div className="min-h-0 flex-1 overflow-auto pb-24 lg:overflow-hidden lg:pb-0">{children}</div>
+      <div data-scroll-root className="min-h-0 flex-1 overflow-auto pb-24 lg:pb-3">{children}</div>
       <nav className="no-print fixed inset-x-0 bottom-0 z-40 grid h-[76px] grid-cols-5 border-t border-white/10 bg-[#0c0c0c] pb-[env(safe-area-inset-bottom)] lg:hidden">
         <Tab href={link("/")} active={path === "/"} icon={Home} label="ダッシュボード" />
         <Tab href={link("/sites")} active={path.startsWith("/sites")} icon={List} label="現場一覧" />

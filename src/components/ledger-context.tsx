@@ -20,6 +20,7 @@ type State = {
   refreshedAt: Date | null;
   sync: SyncInfo | null;
   sheetAlerts: SheetAlert[];
+  months: { month: string; ledger: Ledger }[];
   date: string;
   region: string;
   project: string;
@@ -57,6 +58,7 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
   const [refreshedAt, setRefreshedAt] = useState<Date | null>(null);
   const [sync, setSync] = useState<SyncInfo | null>(null);
   const [sheetAlerts, setSheetAlerts] = useState<SheetAlert[]>([]);
+  const [months, setMonths] = useState<{ month: string; ledger: Ledger }[]>([]);
   const holdRef = useRef(false);
   const requestId = useRef(0);
 
@@ -100,6 +102,7 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
       setRefreshedAt(new Date());
       setSync(body.sync || null);
       setSheetAlerts(body.sheetAlerts || []);
+      setMonths(Array.isArray(body.months) ? body.months : []);
       setError("");
     } catch (caught) {
       if (id === requestId.current) setError(caught instanceof Error ? caught.message : "台帳を読み込めませんでした。");
@@ -132,6 +135,7 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
       refreshedAt,
       sync,
       sheetAlerts,
+      months,
       date,
       region,
       project,
@@ -145,7 +149,7 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
       },
       link,
     }),
-    [user, ledger, events, revision, canEdit, loading, error, refreshedAt, sync, sheetAlerts, date, region, project, replaceQuery, reload, link],
+    [user, ledger, events, revision, canEdit, loading, error, refreshedAt, sync, sheetAlerts, months, date, region, project, replaceQuery, reload, link],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
