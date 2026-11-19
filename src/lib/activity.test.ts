@@ -20,7 +20,7 @@ function ledger(month: string, rows: unknown[][], asDay: number): Ledger {
   };
 }
 
-test("名前の空白を正規化して月間の実人数は1人、人工は足す", () => {
+test("名前の空白は1人にまとめ、会社一括は最大の人工を足す", () => {
   const marks = "B".repeat(5) + "A".repeat(26);
   const half = "C".repeat(2) + "A".repeat(29);
   const data = ledger("2026-11", [
@@ -29,11 +29,28 @@ test("名前の空白を正規化して月間の実人数は1人、人工は足�
     [1, "青葉電設", "", 1, "D".repeat(3) + "A".repeat(28), "", "1".repeat(31), ""],
   ], 19);
   const report = buildActivityReport([{ month: "2026-11", ledger: data }], [], "2026-11-05");
-  assert.equal(report.month.people, 1);
+  assert.equal(report.month.people, 1 + 2);
   assert.equal(report.month.hours, 5 + 1 + 6);
   assert.equal(report.sites.find((site) => site.key === "ツカサ")?.people, 1);
-  assert.equal(report.sites.find((site) => site.key === "平野")?.people, 0);
+  assert.equal(report.sites.find((site) => site.key === "平野")?.people, 2);
   assert.equal(report.sites.find((site) => site.key === "平野")?.hours, 6);
+});
+
+test("2現場の人は月間稼働人数で2人、会社一括の3は3人", () => {
+  const data = ledger("2026-11", [], 19);
+  data.val = ["", "1", "3"];
+  const ones = "1".repeat(31);
+  const day = "B" + "A".repeat(30);
+  data.r = [
+    [0, "青木 蓮", "", 0, day, "", ones, ""],
+    [1, "青木 蓮", "", 0, day, "", ones, ""],
+    [1, "青葉電設", "", 1, "C" + "A".repeat(30), "", ones, ""],
+  ];
+  const report = buildActivityReport([{ month: "2026-11", ledger: data }], [], "2026-11-02");
+  assert.equal(report.month.people, 2 + 3);
+  assert.equal(report.sites.find((site) => site.key === "ツカサ")?.people, 1);
+  assert.equal(report.sites.find((site) => site.key === "平野")?.people, 1 + 3);
+  assert.equal(report.momFair.people.diff, null);
 });
 
 test("月途中は前月全体と前月同日を分け、年初の実人数は月をまたいで1人", () => {

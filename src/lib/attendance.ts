@@ -308,6 +308,19 @@ export function counted(row: CoreRow, status: string) {
   return !!(row.a.has && row.a.c === "確定" && row.a.s === status);
 }
 
+/**
+ * その行がシートの合計（出勤）に足す人数。
+ * 個人は1現場につき1人（0.5 や「2」「3時間」も人数は1。人工は value 側）。
+ * 会社一括はセルの人工（3 なら 3）。移動は 0。
+ */
+export function attendanceWeight(row: CoreRow): number {
+  if (!counted(row, "出勤")) return 0;
+  if (!row.a.group) return 1;
+  const value = row.a.value;
+  if (typeof value === "number" && Number.isFinite(value) && value > 0) return value;
+  return 1;
+}
+
 export function numberSeen(n: number, unsettled: boolean) {
   return n ? String(n) : unsettled ? "未確定" : "0";
 }
@@ -320,8 +333,7 @@ export function totalStats(rows: CoreRow[]) {
     if (!people.has(name)) people.set(name, []);
     people.get(name)!.push(row);
   }
-  let count = 0,
-    no = 0,
+  let no = 0,
     off = 0,
     explicit = 0,
     pending = 0,
@@ -329,7 +341,6 @@ export function totalStats(rows: CoreRow[]) {
   for (const list of people.values()) {
     const on = list.filter((r) => counted(r, "出勤"));
     if (on.length) {
-      count++;
       if (on.length > 1) dup = true;
       continue;
     }
@@ -344,6 +355,12 @@ export function totalStats(rows: CoreRow[]) {
     }
     if (list.some((r) => isUnknown(r.a) || r.a.c === "予定")) pending++;
   }
+  let count = 0;
+  for (const row of rows) {
+    if (row.a.has === false || row.a.s === "当日対象外") continue;
+    count += attendanceWeight(row);
+  }
+  count = Math.round(count * 100) / 100;
   return {
     count,
     no,
@@ -360,7 +377,7 @@ export function totalStats(rows: CoreRow[]) {
 export function missing(rows: CoreRow[], needs: Map<number, ReviewEvent>, pi: number) {
   const e = needs.get(pi);
   const a = totalStats(rows);
-  if (e?.c !== "確定" || a.un || a.group || a.dup || !rows.length || rows.some((r) => r.a.c === "予定")) return null;
+  if (e?.c !== "確定" || a.un || a.dup || !rows.length || rows.some((r) => r.a.c === "予定")) return null;
   return Math.max(0, Number(e.value) - a.count);
 }
 

@@ -53,7 +53,7 @@ export function SiteDetail({ id }: { id: string }) {
           {canEdit && <Button className="h-12 bg-[#ff6a00] font-black text-black hover:bg-[#ff8a1f]" onClick={() => { setEditKey(""); setOpen(true); }}>訂正・確認を登録</Button>}
         </div>
         <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-6">
-          <Stat label="実人数" value={model.head.total} />
+          <Stat label="全体" value={model.head.total} />
           <Stat label="出勤" value={model.head.attend} orange />
           <Stat label="休み" value={model.head.rest} />
           <Stat label="欠勤" value={model.head.absent} />
@@ -62,7 +62,7 @@ export function SiteDetail({ id }: { id: string }) {
         </div>
         {(model.head.groups > 0 || model.head.move > 0) && (
           <p className="mt-3 text-sm text-neutral-400">
-            {model.head.groups > 0 && `会社一括 ${model.head.groups}件・グループ人工 ${model.head.groupHours}（人数に含めていません） `}
+            {model.head.groups > 0 && `会社一括 ${model.head.groupHours}人を出勤に含めています `}
             {model.head.move > 0 && `移動 ${model.head.move}人は出勤に含めていません`}
           </p>
         )}

@@ -114,14 +114,14 @@ export function ReportsView() {
       </div>
       {tab === "trend" && (
         <div className="panel h-[360px] p-3">
-          <h2 className="font-black">日別の出勤実人数</h2>
+          <h2 className="font-black">日別の出勤</h2>
           <TrendChart data={model.series} />
         </div>
       )}
       {tab === "company" && (
         <div className="panel overflow-auto">
           <table className="w-full text-sm">
-            <thead className="text-left text-neutral-400"><tr>{["所属", "実人数", "出勤", "休み", "欠勤", "未入力", "移動"].map((label) => <th key={label} className="px-3 py-2">{label}</th>)}</tr></thead>
+            <thead className="text-left text-neutral-400"><tr>{["所属", "全体", "出勤", "休み", "欠勤", "未入力", "移動"].map((label) => <th key={label} className="px-3 py-2">{label}</th>)}</tr></thead>
             <tbody>
               {model.companies.map((company) => (
                 <tr key={company.company} className="border-t border-[#262626]">

@@ -1,4 +1,4 @@
-import { core, counted, projectName, projectRegion, type Ledger, type ReviewEvent } from "./attendance";
+import { attendanceWeight, core, counted, projectName, projectRegion, type Ledger, type ReviewEvent } from "./attendance";
 import { personKey } from "./aggregate";
 
 export type Growth = { diff: number | null; rate: number | null };
@@ -39,7 +39,7 @@ export type ActivityReport = {
 
 type Scope = { region?: string; projectName?: string };
 
-type Bucket = { people: Set<string>; hours: number; region: string };
+type Bucket = { people: Map<string, number>; hours: number; region: string };
 
 export function growth(current: number, previous: number | null): Growth {
   if (previous == null) return { diff: null, rate: null };
@@ -81,7 +81,7 @@ export function buildActivityReport(
     series.push({
       month: key,
       label: `${Number(key.slice(5))}月`,
-      people: slice?.people.size ?? 0,
+      people: peopleOf(slice?.people),
       hours: round(slice?.hours ?? 0),
       imported: byMonth.has(key),
       partial: key === month && partial,
@@ -95,17 +95,17 @@ export function buildActivityReport(
     asOf,
     partial,
     monthLabel: monthNames,
-    month: { people: current.people.size, hours: round(current.hours), from: monthStart, to: monthTo, label: `${monthNames}${day}日まで` },
+    month: { people: peopleOf(current.people), hours: round(current.hours), from: monthStart, to: monthTo, label: `${monthNames}${day}日まで` },
     previousFull: fullPrevious
-      ? { people: fullPrevious.people.size, hours: round(fullPrevious.hours), from: `${previous}-01`, to: `${previous}-${String(previousDim).padStart(2, "0")}`, label: `${previousName}全体` }
+      ? { people: peopleOf(fullPrevious.people), hours: round(fullPrevious.hours), from: `${previous}-01`, to: `${previous}-${String(previousDim).padStart(2, "0")}`, label: `${previousName}全体` }
       : null,
     previousSameDay: fairPrevious
-      ? { people: fairPrevious.people.size, hours: round(fairPrevious.hours), from: `${previous}-01`, to: previousSameTo, label: `${previousName}1〜${sameDay}日` }
+      ? { people: peopleOf(fairPrevious.people), hours: round(fairPrevious.hours), from: `${previous}-01`, to: previousSameTo, label: `${previousName}1〜${sameDay}日` }
       : null,
-    momFull: { people: growth(current.people.size, fullPrevious ? fullPrevious.people.size : null), hours: growth(round(current.hours), fullPrevious ? round(fullPrevious.hours) : null) },
-    momFair: { people: growth(current.people.size, fairPrevious ? fairPrevious.people.size : null), hours: growth(round(current.hours), fairPrevious ? round(fairPrevious.hours) : null) },
+    momFull: { people: growth(peopleOf(current.people), fullPrevious ? peopleOf(fullPrevious.people) : null), hours: growth(round(current.hours), fullPrevious ? round(fullPrevious.hours) : null) },
+    momFair: { people: growth(peopleOf(current.people), fairPrevious ? peopleOf(fairPrevious.people) : null), hours: growth(round(current.hours), fairPrevious ? round(fairPrevious.hours) : null) },
     year: {
-      people: yearSlice.people.size,
+      people: peopleOf(yearSlice.people),
       hours: round(yearSlice.hours),
       from: yearFrom,
       to: monthTo,
@@ -127,18 +127,18 @@ function joinBreakdown(current: Map<string, Bucket>, previous: Map<string, Bucke
     return {
       key,
       region: now?.region || prev?.region || same?.region || "",
-      people: now?.people.size ?? 0,
+      people: peopleOf(now?.people),
       hours: round(now?.hours ?? 0),
-      previousPeople: previous ? (prev?.people.size ?? 0) : null,
+      previousPeople: previous ? peopleOf(prev?.people) : null,
       previousHours: previous ? round(prev?.hours ?? 0) : null,
-      fairPeople: fair ? (same?.people.size ?? 0) : null,
+      fairPeople: fair ? peopleOf(same?.people) : null,
       fairHours: fair ? round(same?.hours ?? 0) : null,
     };
   }).sort((a, b) => b.people - a.people || a.key.localeCompare(b.key, "ja"));
 }
 
 function summarize(byMonth: Map<string, Ledger>, events: ReviewEvent[], from: string, to: string, scope: Scope) {
-  const people = new Set<string>();
+  const people = new Map<string, number>();
   let hours = 0;
   const regions = new Map<string, Bucket>();
   const sites = new Map<string, Bucket>();
@@ -158,21 +158,38 @@ function summarize(byMonth: Map<string, Ledger>, events: ReviewEvent[], from: st
       const siteBucket = ensure(sites, site, region);
       regionBucket.hours += value;
       siteBucket.hours += value;
-      if (row.a.group) continue;
-      const key = personKey(row.n);
-      if (!key) continue;
-      people.add(key);
-      regionBucket.people.add(key);
-      siteBucket.people.add(key);
+      const name = personKey(row.n);
+      if (!name) continue;
+      const key = `${row.a.group ? "g:" : ""}${site}\0${name}`;
+      const weight = attendanceWeight(row);
+      addHead(people, key, weight, !!row.a.group);
+      addHead(regionBucket.people, key, weight, !!row.a.group);
+      addHead(siteBucket.people, key, weight, !!row.a.group);
     }
   }
   return { people, hours, regions, sites };
 }
 
+/** 個人は現場ごとに1人。会社一括は期間中いちばん多かった日の人工。 */
+function addHead(map: Map<string, number>, key: string, weight: number, group: boolean) {
+  if (group) {
+    map.set(key, Math.max(map.get(key) ?? 0, weight));
+    return;
+  }
+  if (!map.has(key)) map.set(key, 1);
+}
+
+function peopleOf(map: Map<string, number> | undefined) {
+  if (!map) return 0;
+  let total = 0;
+  for (const weight of map.values()) total += weight;
+  return round(total);
+}
+
 function ensure(map: Map<string, Bucket>, key: string, region: string) {
   const found = map.get(key);
   if (found) return found;
-  const created = { people: new Set<string>(), hours: 0, region };
+  const created = { people: new Map<string, number>(), hours: 0, region };
   map.set(key, created);
   return created;
 }

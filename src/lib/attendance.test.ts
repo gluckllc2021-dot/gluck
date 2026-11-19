@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { core, counted, isUnknown, missing, totalStats, type Ledger } from "./attendance";
-import { headcount, siteStats } from "./aggregate";
+import { headcount, peopleRollup, siteStats } from "./aggregate";
 import { buildDemo } from "./demo-data";
 
 function ledger(): Ledger {
@@ -116,6 +116,56 @@ describe("出面の判定", () => {
   });
 });
 
+describe("シートの合計と同じ出勤", () => {
+  function marks(ch: string) {
+    return "A".repeat(18) + ch + "A".repeat(11);
+  }
+  function sheet(): Ledger {
+    const ones = "1".repeat(30);
+    return {
+      v: 1,
+      as: "2026-11-19",
+      ds: "2026-11-19",
+      val: ["", "1", "0.5", "3", "移動", "3時間"],
+      p: [
+        ["北浜", "大阪", 0, "", 30],
+        ["札幌", "北海道", 0, "", 30],
+      ],
+      r: [
+        [0, "青木 蓮", "北海", 0, marks("B"), "", ones, ""],
+        [1, "青木 蓮", "北海", 0, marks("B"), "", ones, ""],
+        [0, "青葉電設", "青葉電設", 1, marks("D"), "", ones, ""],
+        [0, "黒田 陽菜", "北海", 0, marks("C"), "", ones, ""],
+        [0, "星野 樹", "北海", 0, marks("E"), "", ones, ""],
+        [0, "川口 律", "北海", 0, marks("F"), "", ones, ""],
+        [0, "空白 太郎", "北海", 0, marks("A"), "", ones, ""],
+        [1, "森田電気", "森田電気", 1, marks("A"), "", ones, ""],
+      ],
+      people: [],
+      plan: [],
+    };
+  }
+
+  it("会社一括の人工を足し、2現場は両方数え、未入力は負にしない", () => {
+    const { rows } = core(sheet(), [], "2026-11-19");
+    const head = headcount(rows);
+    assert.equal(head.attend, 1 + 1 + 3 + 1 + 1);
+    assert.equal(head.groupHours, 3);
+    assert.equal(head.groups, 1);
+    assert.equal(head.move, 1);
+    assert.equal(head.unknown, 1);
+    assert.ok(head.unknown >= 0);
+    assert.equal(head.manHours, 1 + 1 + 0.5);
+    assert.equal(head.attend + head.rest + head.absent + head.unknown + head.move + head.other, head.total);
+    assert.equal(head.total, head.rows + head.groupHours);
+    assert.equal(head.doubleAttend, 1);
+    assert.equal(peopleRollup(rows).some((person) => person.name === "青葉電設"), false);
+    const site = rows.filter((row) => row.pi === 0);
+    assert.equal(headcount(site).attend, 1 + 3 + 1 + 1);
+    assert.equal(totalStats(rows).count, head.attend);
+  });
+});
+
 describe("デモ台帳の集計", () => {
   it("不足が出ている現場は2件で、区分の合計が全体人数と一致する", () => {
     const { ledger: data, events } = buildDemo();
@@ -125,7 +175,10 @@ describe("デモ台帳の集計", () => {
     assert.equal(short.length, 2);
     const head = headcount(snap.rows);
     assert.equal(head.attend + head.rest + head.absent + head.unknown + head.move + head.other, head.total);
-    assert.ok(head.rows > head.total);
+    assert.ok(head.unknown >= 0);
+    assert.equal(head.groupHours, 2);
+    assert.ok(head.attend >= head.groupHours);
+    assert.equal(head.total, head.rows + head.groupHours);
     assert.equal(head.doubleAttend, 2);
     assert.ok(head.attend > 0);
     assert.ok((head.rate ?? 0) > 0);

@@ -15,7 +15,7 @@ export function ActivityView() {
           <p className="text-[11px] font-semibold tracking-[0.16em] text-[#f2c300]">HEADCOUNT</p>
           <h1 className="text-2xl font-black">稼働の推移</h1>
         </div>
-        <p className="max-w-xl text-sm text-neutral-400">1日以上出勤した実人数と、延べ人工です。同じ人は名前の空白を揃えて1人に数えます。</p>
+        <p className="max-w-xl text-sm text-neutral-400">1日以上出勤した人数と、延べ人工です。同じ人でも現場が違えば別に数え、会社一括はその期間でいちばん多かった日の人工を足します。</p>
       </div>
       <ActivityStrip report={report} />
       {!report && <p className="mt-4 text-sm text-neutral-500">集計しています…</p>}

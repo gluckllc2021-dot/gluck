@@ -108,7 +108,7 @@ function PcHome({ date, today, model, report, alerts, moveDay, setDate, refreshe
       </div>
       <section data-card-row className="grid grid-cols-[repeat(auto-fit,minmax(168px,1fr))] gap-2">
         <TodayCard href={link("/reports", { tab: "workers" })} label="全体人数" value={head.total} unit="人" caption={`名簿 ${head.rows}行`} compare={prior ? { label: shortDate(prior.date), value: prior.head.total } : null} />
-        <TodayCard href={link("/reports", { tab: "workers", status: "出勤" })} label="出勤" value={head.attend} unit="人" hero caption={doubles.length ? `2現場 ${doubles.length}人` : "実人数"} compare={prior ? { label: shortDate(prior.date), value: prior.head.attend } : null} />
+        <TodayCard href={link("/reports", { tab: "workers", status: "出勤" })} label="出勤" value={head.attend} unit="人" hero caption={doubles.length ? `2現場 ${doubles.length}人` : "現場ごと"} compare={prior ? { label: shortDate(prior.date), value: prior.head.attend } : null} />
         <TodayCard href={link("/reports", { tab: "workers", status: "休み" })} label="休み" value={head.rest} unit="人" caption={head.vacation ? `休暇 ${head.vacation}` : "休暇を含む"} compare={prior ? { label: shortDate(prior.date), value: prior.head.rest } : null} />
         <TodayCard href={link("/reports", { tab: "workers", status: "欠勤" })} label="欠勤" value={head.absent} unit="人" tone="red" compare={prior ? { label: shortDate(prior.date), value: prior.head.absent } : null} />
         <TodayCard href={link("/reports", { tab: "workers", status: "未入力" })} label="未入力" value={head.unknown} unit="人" compare={prior ? { label: shortDate(prior.date), value: prior.head.unknown } : null} />
@@ -358,7 +358,7 @@ function MobileHome({ date, today, model, report, moveDay, setDate, link }: {
           </div>
         )}
         <ActivityStrip report={report} />
-        <p className="text-xs text-neutral-500">実人数です。名簿 {head.rows}行{head.move ? `。移動 ${head.move}人は出勤に含めていません` : ""}{head.groups ? `。会社一括 ${head.groups}件` : ""}</p>
+        <p className="text-xs text-neutral-500">現場ごとの合計です。2現場は両方数えます。名簿 {head.rows}行{head.move ? `。移動 ${head.move}人は出勤に含めていません` : ""}{head.groupHours ? `。会社一括 ${head.groupHours}人を含みます` : ""}</p>
         <Link href={link("/alerts")} className="relative block overflow-hidden rounded-2xl border border-[#ff6a00]/50 bg-[#1c140d] p-4 pr-16">
           <div className="flex items-center gap-3">
             <AlertTriangle className="h-10 w-10 text-[#ff6a00]" />

@@ -100,4 +100,17 @@ describe("台帳への反映と手動訂正", () => {
     const people = headcount(snap.rows.filter((item) => item.a.group !== true));
     assert.ok(people.total >= 1);
   });
+
+  it("レックスの会社一括は当日の人工を出勤に足す", () => {
+    const book = mockNovemberWorkbook();
+    const november = ledgersFromWorkbook(book, [], asOf).months.get("2026-11")!;
+    const snap = core(november, [], "2026-11-03");
+    const rexPi = november.p.findIndex((project) => project[0] === "レックス枚方案件");
+    const rex = headcount(snap.rows.filter((row) => row.pi === rexPi));
+    assert.equal(rex.attend, 4);
+    assert.equal(rex.groupHours, 3);
+    assert.equal(rex.groups, 1);
+    const perSite = november.p.reduce((sum, _project, pi) => sum + headcount(snap.rows.filter((row) => row.pi === pi)).attend, 0);
+    assert.equal(headcount(snap.rows).attend, perSite);
+  });
 });

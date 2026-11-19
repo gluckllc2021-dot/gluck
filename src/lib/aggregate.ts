@@ -1,4 +1,5 @@
 import {
+  attendanceWeight,
   companyOf,
   contactText,
   core,
@@ -37,7 +38,7 @@ export type PersonRollup = {
 };
 
 export type Headcount = {
-  /** 重複を除いた実人数 */
+  /** 現場ごとの合計。会社一括の人工を含み、同日2現場は両方数える */
   total: number;
   attend: number;
   rest: number;
@@ -98,7 +99,7 @@ function personStatus(list: CoreRow[]): PersonStatus {
   return "その他";
 }
 
-/** 会社一括（グループ人工）と名簿外は人数に入れない。同姓同名は1人。 */
+/** 同日2現場の警告用。氏名の空白は1人にまとめ、会社一括は入れない。人数の合計には使わない。 */
 export function peopleRollup(rows: CoreRow[]): PersonRollup[] {
   const map = new Map<string, CoreRow[]>();
   for (const row of rows) {
@@ -123,29 +124,57 @@ export function peopleRollup(rows: CoreRow[]): PersonRollup[] {
   });
 }
 
+function roundQty(value: number) {
+  return Math.round(value * 100) / 100;
+}
+
+/** シートの日次合計と同じ。個人は現場ごとに1人、会社一括は人工を足す。未入力は行の数だけで、引き算しない。 */
 export function headcount(rows: CoreRow[]): Headcount {
   const h = { ...EMPTY };
-  for (const person of peopleRollup(rows)) {
-    h.total++;
-    if (person.status === "出勤") h.attend++;
-    else if (person.status === "休み") h.rest++;
-    else if (person.status === "欠勤") h.absent++;
-    else if (person.status === "未入力") h.unknown++;
-    else if (person.status === "移動") h.move++;
-    else h.other++;
-    if (person.doubleAttend) h.doubleAttend++;
-    if (person.status === "休み" && person.rows.some((row) => row.a.s === "休暇")) h.vacation++;
-  }
   for (const row of rows) {
+    if (row.a.has === false || row.a.s === "名簿外" || row.a.s === "当日対象外") continue;
     if (row.a.group) {
+      if (!row.a.known) continue;
+      const weight = attendanceWeight(row);
+      if (weight <= 0) continue;
       h.groups++;
-      if (Number.isFinite(row.a.value)) h.groupHours += Number(row.a.value);
+      h.attend += weight;
+      h.total += weight;
+      h.groupHours += typeof row.a.value === "number" && Number.isFinite(row.a.value) ? Number(row.a.value) : weight;
       continue;
     }
-    if (row.a.has === false) continue;
+    const kind = classify(row);
+    if (kind === "名簿外" || kind === "当日対象外") continue;
     h.rows++;
-    if (counted(row, "出勤") && Number.isFinite(row.a.value)) h.manHours += Number(row.a.value);
+    if (kind === "出勤") {
+      const weight = attendanceWeight(row);
+      h.attend += weight;
+      h.total += weight;
+      if (typeof row.a.value === "number" && Number.isFinite(row.a.value)) h.manHours += Number(row.a.value);
+    } else if (kind === "休み") {
+      h.rest++;
+      h.total++;
+      if (row.a.s === "休暇") h.vacation++;
+    } else if (kind === "欠勤") {
+      h.absent++;
+      h.total++;
+    } else if (kind === "未入力") {
+      h.unknown++;
+      h.total++;
+    } else if (kind === "移動") {
+      h.move++;
+      h.total++;
+    } else {
+      h.other++;
+      h.total++;
+    }
   }
+  h.doubleAttend = peopleRollup(rows).filter((person) => person.doubleAttend).length;
+  h.attend = roundQty(h.attend);
+  h.total = roundQty(h.total);
+  h.manHours = roundQty(h.manHours);
+  h.groupHours = roundQty(h.groupHours);
+  h.unknown = Math.max(0, h.unknown);
   h.rate = h.total ? Math.round((h.attend / h.total) * 100) : null;
   return h;
 }
@@ -197,7 +226,6 @@ export function shortageReason(rows: CoreRow[], need?: ReviewEvent) {
   const stats = totalStats(rows);
   if (!rows.length) return "名簿がありません";
   if (stats.un) return "未確認の名簿があります";
-  if (stats.group) return "会社一括の出勤があります";
   if (stats.dup) return "同名が複数あります";
   if (rows.some((r) => r.a.c === "予定")) return "予定の勤務が残っています";
   return null;

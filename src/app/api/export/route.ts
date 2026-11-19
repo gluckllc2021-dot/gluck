@@ -27,7 +27,7 @@ export async function GET(req: Request) {
   const snap = core(ledger, await listEvents(), date);
   const lines: (string | number)[][] = [];
   if (kind === "sites") {
-    lines.push(["現場コード", "現場名", "地域", "担当者", "実人数", "名簿行", "出勤", "休み", "欠勤", "未入力", "移動", "出勤率", "必要人数", "不足", "ステータス"]);
+    lines.push(["現場コード", "現場名", "地域", "担当者", "全体", "名簿行", "出勤", "休み", "欠勤", "未入力", "移動", "出勤率", "必要人数", "不足", "ステータス"]);
     for (const site of siteStats(ledger, snap.rows, snap.needs, scope)) {
       const label = statusLabel(site);
       lines.push([

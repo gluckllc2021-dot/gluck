@@ -171,7 +171,7 @@ export function buildDemo(): { ledger: Ledger; events: ReviewEvent[] } {
     actor: { name: "田中 主任", role: "editor" },
   }));
 
-  // 掛け持ち。同じ氏名が別現場でも出勤なら、全体人数は1人、警告対象にする。
+  // 掛け持ち。出勤は現場ごとに足し、同日2現場の警告は1人のまま出す。
   const twin = [
     [0, 20],
     [1, 21],

@@ -22,10 +22,10 @@ export default function PrintPage() {
         <button className="rounded bg-black px-4 py-2 font-bold text-white" onClick={() => window.print()}>印刷する</button>
       </div>
       <h1 className="text-2xl font-black">出面確認台帳　{formatLongDate(date)}</h1>
-      <p className="text-sm">グリュック合同会社　実人数 {model.head.total}　出勤 {model.head.attend}　出勤率 {model.head.rate ?? 0}%　名簿 {model.head.rows}行</p>
+      <p className="text-sm">グリュック合同会社　全体 {model.head.total}　出勤 {model.head.attend}　出勤率 {model.head.rate ?? 0}%　名簿 {model.head.rows}行</p>
       <table className="mt-4 w-full border-collapse text-sm">
         <thead>
-          <tr>{["現場", "地域", "実人数", "出勤", "休み", "欠勤", "未入力", "出勤率", "状態"].map((label) => <th key={label} className="border px-2 py-1 text-left">{label}</th>)}</tr>
+          <tr>{["現場", "地域", "全体", "出勤", "休み", "欠勤", "未入力", "出勤率", "状態"].map((label) => <th key={label} className="border px-2 py-1 text-left">{label}</th>)}</tr>
         </thead>
         <tbody>
           {model.sites.map((site) => (
