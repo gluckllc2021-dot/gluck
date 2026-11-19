@@ -138,8 +138,9 @@ export function CorrectionDialog({ open, onOpenChange, pi, rowKey }: { open: boo
   const showAttendance = kind === "src" || kind === "detail";
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92dvh] max-w-3xl overflow-y-auto border-[#3a3a3a] bg-[#141414] text-white">
+      <DialogContent className="max-h-[92dvh] max-w-3xl overflow-y-auto border-white/15 bg-[#0c1b30] text-white">
         <DialogHeader>
+          <p className="text-[11px] font-semibold tracking-[0.2em] text-[#f2c300]">CORRECTION</p>
           <DialogTitle className="text-xl font-black">共有台帳を訂正</DialogTitle>
         </DialogHeader>
         <p className="text-sm text-neutral-400">{row ? `原本 ${contactText(row.source)}　／　現在の台帳 ${contactText(row.a)}` : "根拠か確認方法を記入してください。原本の値は履歴に残ります。"}</p>

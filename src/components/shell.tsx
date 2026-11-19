@@ -24,12 +24,7 @@ import { useLedger } from "./ledger-context";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 function Logo() {
-  return (
-    <div className="flex items-center gap-2.5">
-      <div className="grid h-9 w-9 place-items-center rounded-md bg-[#ff6a00] text-[22px] font-black italic leading-none text-[#1a0c00]">G</div>
-      <div className="text-[15px] font-bold leading-tight">グリュック合同会社</div>
-    </div>
-  );
+  return <img src="/brand/logo-white.png" alt="グリュック合同会社" className="h-9 w-auto" />;
 }
 
 export function Shell({ children }: { children: React.ReactNode }) {
@@ -64,16 +59,17 @@ export function Shell({ children }: { children: React.ReactNode }) {
     ["/reports", "実績・レポート", BarChart3],
     ["/settings", "設定", Settings],
   ] as const;
+  const admin = path.startsWith("/settings");
 
   return (
-    <div className="flex min-h-dvh flex-col bg-[#0e0e0e] lg:h-dvh lg:overflow-hidden">
-      <header className="no-print hidden h-[60px] shrink-0 items-center gap-4 border-b border-[#2a2a2a] bg-[#101010] px-4 lg:flex">
+    <div className={`flex min-h-dvh flex-col lg:h-dvh lg:overflow-hidden ${admin ? "bg-[#071a33]" : "bg-[#0e0e0e]"}`}>
+      <header className={`no-print hidden h-[60px] shrink-0 items-center gap-4 border-b px-4 lg:flex ${admin ? "border-white/10 bg-[#0b2545]" : "border-[#2a2a2a] bg-[#101010]"}`}>
         <Logo />
         <div className="hazard-thin h-8 w-16 rounded-sm" />
         <div className="text-[22px] font-black tracking-wide">出面確認台帳</div>
         <div className="hazard-thin h-8 w-16 rounded-sm" />
         <div className="ml-auto flex items-center gap-2">
-          <label className="flex items-center gap-2 text-sm text-neutral-300">
+          <label className="flex shrink-0 items-center gap-2 whitespace-nowrap text-sm text-neutral-300">
             <MapPin className="h-4 w-4 text-[#ff6a00]" />
             地域
             <select className="field h-9 w-[132px]" value={region} onChange={(event) => setRegion(event.target.value)} aria-label="地域">
@@ -83,7 +79,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
               ))}
             </select>
           </label>
-          <label className="flex items-center gap-2 text-sm text-neutral-300">
+          <label className="flex shrink-0 items-center gap-2 whitespace-nowrap text-sm text-neutral-300">
             <Building2 className="h-4 w-4 text-[#ff6a00]" />
             現場
             <select className="field h-9 w-[210px]" value={project} onChange={(event) => setProject(event.target.value)} aria-label="現場">

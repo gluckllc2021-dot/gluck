@@ -7,6 +7,7 @@ import { core, projectName } from "@/lib/attendance";
 import { companyStats, headcount, peopleRollup, queueItems, siteStats } from "@/lib/aggregate";
 import { useLedger } from "./ledger-context";
 import { MobilePageHeader } from "./shell";
+import { AdminHero, brandEn } from "./brand";
 import { TrendChart } from "./trend-chart";
 import { dailySeries } from "@/lib/aggregate";
 
@@ -102,11 +103,11 @@ export function ReportsView() {
   ] as const;
   const rows = core(ledger, events, date).rows.filter((row) => (!region || String(ledger.p[row.pi]?.[1] ?? "") === region) && (!project || String(row.pi) === project));
   return (
-    <div className="mx-auto max-w-6xl px-3 py-3 lg:px-6">
-      <MobilePageHeader title="実績・レポート" />
-      <div className="mb-3 flex gap-2 overflow-auto">
+    <div className="mx-auto h-full max-w-6xl overflow-auto px-3 py-3 lg:px-6">
+      {tab !== "history" && <MobilePageHeader title="実績・レポート" />}
+      <div className="mb-3 flex flex-wrap gap-2">
         {tabs.map(([id, label]) => (
-          <Link key={id} href={link("/reports", { tab: id })} className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold ${tab === id ? "bg-[#ff6a00] text-black" : "bg-[#1c1c1c] text-neutral-300"}`}>{label}</Link>
+          <Link id={`report-tab-${id}`} key={id} href={link("/reports", { tab: id })} className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold ${tab === id ? "bg-[#ff6a00] text-black" : "bg-[#1c1c1c] text-neutral-300"}`}>{label}</Link>
         ))}
         <a className="shrink-0 rounded-full bg-[#1c1c1c] px-4 py-2 text-sm font-bold text-[#ffb067]" href={link("/api/export", { kind: "workers", status: localStatus === "すべて" ? undefined : localStatus })}>作業員CSV</a>
         <Link className="shrink-0 rounded-full bg-[#1c1c1c] px-4 py-2 text-sm font-bold" href={link("/print")}>印刷</Link>
@@ -167,12 +168,19 @@ export function ReportsView() {
         </div>
       )}
       {tab === "history" && (
-        <div className="space-y-2">
+        <div className={`${brandEn.variable} space-y-3`}>
+          <AdminHero kicker="HISTORY" title="訂正履歴" lead="原本の値は残したまま、台帳側の訂正だけを時系列で残します。シート同期では上書きしません。" />
           {model.events.filter((event) => !project || String(event.pi) === project).map((event) => (
-            <article key={event.id} className="panel px-4 py-3">
-              <div className="flex justify-between gap-2"><span className="font-black">{event.n || projectName(ledger, event.pi)}</span><span className="text-sm text-neutral-400">{event.day}</span></div>
-              <div className="text-sm text-neutral-300">{event.before?.label || "記録なし"} → {event.after?.label || event.s || event.flag || ""}</div>
-              <div className="text-sm text-neutral-500">{event.who}　{event.ref}</div>
+            <article key={event.id} className="brand-card px-4 py-4">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <p className="text-[11px] font-bold text-[#f2c300]">{event.t === "need" ? "必要人数" : event.t === "note" ? "確認メモ" : "出面の訂正"}</p>
+                  <h3 className="mt-1 font-black">{event.n || projectName(ledger, event.pi)}</h3>
+                </div>
+                <span className={`${brandEn.className} text-sm font-semibold text-[#f2c300]`}>{event.day}</span>
+              </div>
+              <p className="mt-2 text-sm text-white/80">{event.before?.label || "記録なし"} <span className="text-[#ff6a00]">→</span> {event.after?.label || event.s || event.flag || ""}</p>
+              <p className="mt-1 text-sm text-white/50">{projectName(ledger, event.pi)}　{event.who}　{event.ref}</p>
             </article>
           ))}
           {!model.events.length && <Empty text="この月の訂正履歴はまだありません。" />}
