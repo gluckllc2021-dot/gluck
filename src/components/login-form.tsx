@@ -10,7 +10,6 @@ export function LoginForm() {
   const [email, setEmail] = useState("admin@gluck.example");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
-  const [demo, setDemo] = useState(false);
   const [needsSetup, setNeedsSetup] = useState(false);
   const [pending, setPending] = useState(false);
 
@@ -18,9 +17,7 @@ export function LoginForm() {
     fetch("/api/auth/login")
       .then((response) => response.json())
       .then((body) => {
-        setDemo(!!body.demo);
         setNeedsSetup(!!body.needsSetup);
-        if (body.demo) setPassword("Gluck-Demo-2026");
       })
       .catch(() => undefined);
   }, []);
@@ -32,7 +29,7 @@ export function LoginForm() {
     const response = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
     });
     const body = await response.json();
     setPending(false);
@@ -63,14 +60,13 @@ export function LoginForm() {
             </div>
           </div>
           <label className="grid gap-1 text-sm text-neutral-300">メールアドレス
-            <Input className="h-12" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required autoComplete="username" />
+            <Input className="h-12" type="email" inputMode="email" value={email} onChange={(event) => setEmail(event.target.value)} required autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} />
           </label>
           <label className="mt-3 grid gap-1 text-sm text-neutral-300">パスワード
             <Input className="h-12" type="password" value={password} onChange={(event) => setPassword(event.target.value)} required autoComplete="current-password" />
           </label>
           {message && <p className="mt-3 text-sm font-bold text-[#ffb067]">{message}</p>}
           {needsSetup && <p className="mt-3 text-sm text-neutral-400">初期ユーザーが未作成です。サーバーで npm run user:create を実行してください。</p>}
-          {demo && <p className="mt-3 text-sm text-neutral-500">デモ: admin@gluck.example / editor@gluck.example / viewer@gluck.example　パスワード Gluck-Demo-2026。本番ではこの利用者を削除してください。</p>}
           <Button disabled={pending} className="mt-5 h-12 w-full bg-[#ff6a00] text-base font-black text-black hover:bg-[#ff8a1f]">{pending ? "確認中…" : "ログイン"}</Button>
         </form>
       </section>
