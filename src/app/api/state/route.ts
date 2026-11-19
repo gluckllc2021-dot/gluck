@@ -12,15 +12,15 @@ export async function GET(req: Request) {
   await syncAll(false);
   const date = new URL(req.url).searchParams.get("date") || todayJST();
   return NextResponse.json({
-    ledger: getLedgerForDate(date),
-    months: listMonthLedgers(date.slice(0, 4)),
-    events: listEvents(),
+    ledger: await getLedgerForDate(date),
+    months: await listMonthLedgers(date.slice(0, 4)),
+    events: await listEvents(),
     canEdit: canEdit(user.role),
     role: user.role,
     userName: user.name,
     userId: user.id,
-    sourceRevision: getRevision(),
-    sync: getSyncState(),
-    sheetAlerts: getSheetAlerts(),
+    sourceRevision: await getRevision(),
+    sync: await getSyncState(),
+    sheetAlerts: await getSheetAlerts(),
   });
 }

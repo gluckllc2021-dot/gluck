@@ -1,0 +1,23 @@
+# Render の無料Webサービス。シンガポール。ディスクは付かないので、台帳は Turso に置く。
+services:
+  - type: web
+    name: gluck-demen
+    runtime: node
+    region: singapore
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: COOKIE_SECURE
+        value: "1"
+      - key: TURSO_DATABASE_URL
+        sync: false
+      - key: TURSO_AUTH_TOKEN
+        sync: false
+      - key: CRON_SECRET
+        sync: false
+      - key: GOOGLE_SERVICE_ACCOUNT_JSON
+        sync: false

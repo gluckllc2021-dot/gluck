@@ -24,11 +24,11 @@ async function main() {
     console.error("パスワードは10文字以上にしてください。");
     process.exit(1);
   }
-  if (findUserByEmail(email)) {
+  if (await findUserByEmail(email)) {
     console.error("このメールアドレスは既にあります。");
     process.exit(1);
   }
-  insertUser({
+  await insertUser({
     id: crypto.randomUUID(),
     email,
     name,

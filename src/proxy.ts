@@ -3,7 +3,12 @@ import type { NextRequest } from "next/server";
 
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  if (pathname.startsWith("/api/auth/login") || pathname.startsWith("/api/auth/session") && req.method === "POST") {
+  if (
+    pathname.startsWith("/api/auth/login") ||
+    pathname === "/api/health" ||
+    (pathname === "/api/cron/sync" && req.method === "POST") ||
+    (pathname.startsWith("/api/auth/session") && req.method === "POST")
+  ) {
     return NextResponse.next();
   }
   const token = req.cookies.get("gluck_session")?.value;

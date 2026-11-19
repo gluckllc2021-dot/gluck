@@ -13,14 +13,14 @@ export async function GET(req: Request) {
   const region = url.searchParams.get("region") || "";
   const project = url.searchParams.get("project") || "";
   const year = date.slice(0, 4);
-  const ledgers = listMonthLedgers(year);
-  const current = getLedgerForDate(date);
+  const ledgers = await listMonthLedgers(year);
+  const current = await getLedgerForDate(date);
   let projectNameFilter = "";
   if (project && current) {
     const index = Number(project);
     if (Number.isInteger(index) && current.p[index]) projectNameFilter = projectName(current, index);
   }
-  const report = buildActivityReport(ledgers, listEvents(), date, {
+  const report = buildActivityReport(ledgers, await listEvents(), date, {
     region: region || undefined,
     projectName: projectNameFilter || undefined,
   });

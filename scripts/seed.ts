@@ -15,8 +15,8 @@ const users = [
 async function main() {
   const force = process.argv.includes("--force");
   for (const [email, name, role] of users) {
-    if (!findUserByEmail(email)) {
-      insertUser({
+    if (!(await findUserByEmail(email))) {
+      await insertUser({
         id: crypto.randomUUID(),
         email,
         name,
@@ -28,16 +28,16 @@ async function main() {
     }
   }
   const { ledger, events } = buildDemo();
-  const existing = listUsers();
+  const existing = await listUsers();
   for (const month of ["2026-08", "2026-09", "2026-10", "2026-11"]) {
-    if (!listSheets().some((sheet) => sheet.spreadsheetId === `mock-${month}`)) {
-      addSheetFromUrl(`https://docs.google.com/spreadsheets/d/${`mock-${month}`}/edit`, month);
+    if (!(await listSheets()).some((sheet) => sheet.spreadsheetId === `mock-${month}`)) {
+      await addSheetFromUrl(`https://docs.google.com/spreadsheets/d/${`mock-${month}`}/edit`, month);
     }
   }
   if (force) {
-    setMeta("ledger", "null");
-    setMeta("ledger:2026-11", "null");
-    setMeta("ledger:2026-10", "null");
+    await setMeta("ledger", "null");
+    await setMeta("ledger:2026-11", "null");
+    await setMeta("ledger:2026-10", "null");
   }
   const synced = await syncAll(true);
   console.log("シートを同期しました", synced.message);

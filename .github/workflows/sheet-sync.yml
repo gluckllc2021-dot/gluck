@@ -1,0 +1,16 @@
+# 平日 9:00〜18:50（日本時間）に10分ごと。GitHub の時刻は UTC。
+# 秘密はリポジトリの Settings → Secrets に CRON_SECRET と APP_URL を入れる。
+name: sheet-sync
+on:
+  schedule:
+    - cron: "*/10 0-9 * * 1-5"
+  workflow_dispatch:
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 出面シートを同期する
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_URL: ${{ secrets.APP_URL }}
+        run: curl -fsS -X POST -H "x-cron-secret: $CRON_SECRET" "$APP_URL/api/cron/sync"

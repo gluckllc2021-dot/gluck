@@ -24,7 +24,7 @@ export async function POST(req: Request) {
   }
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 });
   const replaceEvents = body.replaceEvents === true || (body.replaceEvents !== false && parsed.events.length > 0);
-  replaceLedger(parsed.ledger, replaceEvents ? parsed.events : null);
+  await replaceLedger(parsed.ledger, replaceEvents ? parsed.events : null);
   return NextResponse.json({
     ok: true,
     projects: parsed.ledger.p.length,

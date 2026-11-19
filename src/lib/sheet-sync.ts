@@ -96,14 +96,14 @@ export async function syncSheet(sheet: StoredSheet, asOf = today()) {
   const book = await loadWorkbook(sheet.spreadsheetId);
   const mappings = sheet.mappings as TabMapping[];
   const preview = parseWorkbook(book, mappings, asOf);
-  const existing = new Map<string, NonNullable<ReturnType<typeof getLedgerForDate>>>();
+  const existing = new Map<string, NonNullable<Awaited<ReturnType<typeof getLedgerForDate>>>>();
   for (const month of [preview.month, ...preview.extraMonths.map((extra) => extra.month)]) {
-    const ledger = getLedgerForDate(`${month}-15`);
+    const ledger = await getLedgerForDate(`${month}-15`);
     if (ledger) existing.set(month, ledger);
   }
-  const applied = ledgersFromWorkbook(book, mappings, asOf, existing, listEvents());
-  for (const [month, ledger] of applied.months) saveMonthLedger(month, ledger, month === asOf.slice(0, 7));
-  replaceEventList(applied.events);
+  const applied = ledgersFromWorkbook(book, mappings, asOf, existing, await listEvents());
+  for (const [month, ledger] of applied.months) await saveMonthLedger(month, ledger, month === asOf.slice(0, 7));
+  await replaceEventList(applied.events);
   const mergedMappings = mergeMappings(
     mappings,
     preview.projects.map((project) => ({
@@ -132,10 +132,10 @@ function today() {
 
 export async function syncAll(force = false) {
   if (syncing) return getSyncState();
-  const sheets = listSheets();
+  const sheets = await listSheets();
   if (!sheets.length) return getSyncState();
-  const last = getSyncState();
-  const interval = syncIntervalMinutes() * 60 * 1000;
+  const last = await getSyncState();
+  const interval = (await syncIntervalMinutes()) * 60 * 1000;
   if (!force && last.at && Date.now() - new Date(last.at).getTime() < interval) return last;
   syncing = true;
   try {
@@ -159,15 +159,15 @@ export async function syncAll(force = false) {
         sheet.lastMessage = error instanceof Error ? error.message : "同期に失敗しました";
       }
     }
-    saveSheets(next);
-    setSheetAlerts(alerts);
+    await saveSheets(next);
+    await setSheetAlerts(alerts);
     const state = {
       at: new Date().toISOString(),
       ok: next.every((sheet) => sheet.lastOk),
       message: warningCount ? `要確認 ${warningCount}件` : "同期しました",
       warningCount,
     };
-    setSyncState(state);
+    await setSyncState(state);
     return state;
   } finally {
     syncing = false;
@@ -183,20 +183,21 @@ export function startSyncLoop() {
   void syncAll(false);
 }
 
-export function publicSheets() {
+export async function publicSheets() {
+  const sheets = await listSheets();
   return {
-    intervalMinutes: syncIntervalMinutes(),
-    configured: accountConfigured() || process.env.SHEET_SOURCE === "mock" || listSheets().some((sheet) => sheet.spreadsheetId.startsWith("mock-")),
-    sheets: listSheets(),
-    alerts: getSheetAlerts(),
-    sync: getSyncState(),
+    intervalMinutes: await syncIntervalMinutes(),
+    configured: accountConfigured() || process.env.SHEET_SOURCE === "mock" || sheets.some((sheet) => sheet.spreadsheetId.startsWith("mock-")),
+    sheets,
+    alerts: await getSheetAlerts(),
+    sync: await getSyncState(),
   };
 }
 
-export function addSheetFromUrl(url: string, month: string) {
+export async function addSheetFromUrl(url: string, month: string) {
   const spreadsheetId = spreadsheetIdFromUrl(url);
   if (!spreadsheetId) throw new Error("スプレッドシートのURLを貼り付けてください。");
-  const sheets = listSheets();
+  const sheets = await listSheets();
   if (sheets.some((sheet) => sheet.spreadsheetId === spreadsheetId)) throw new Error("このシートは登録済みです。");
   sheets.push({
     id: crypto.randomUUID(),
@@ -210,6 +211,6 @@ export function addSheetFromUrl(url: string, month: string) {
     lastMessage: "未同期",
     lastWarningCount: 0,
   });
-  saveSheets(sheets);
+  await saveSheets(sheets);
   return sheets;
 }

@@ -11,7 +11,7 @@ function publicUser(user: { id: string; email: string; name: string; role: strin
 export async function GET(req: Request) {
   const auth = await guard(req, "admin");
   if ("error" in auth && auth.error) return auth.error;
-  return NextResponse.json({ users: listUsers().map(publicUser) });
+  return NextResponse.json({ users: (await listUsers()).map(publicUser) });
 }
 
 export async function POST(req: Request) {
@@ -34,7 +34,7 @@ export async function PATCH(req: Request) {
   if ("error" in auth && auth.error) return auth.error;
   const body = (await req.json().catch(() => null)) as { id?: string; name?: string; role?: Role; password?: string } | null;
   if (!body?.id) return NextResponse.json({ error: "対象の利用者がありません。" }, { status: 400 });
-  const users = listUsers();
+  const users = await listUsers();
   const target = users.find((user) => user.id === body.id);
   if (!target) return NextResponse.json({ error: "利用者が見つかりません。" }, { status: 404 });
   if (body.role && body.role !== "admin" && target.role === "admin" && users.filter((user) => user.role === "admin").length <= 1) {
@@ -54,11 +54,11 @@ export async function DELETE(req: Request) {
   const id = new URL(req.url).searchParams.get("id") || "";
   const actor = auth.user as SessionUser;
   if (!id || id === actor.id) return NextResponse.json({ error: "自分自身は削除できません。" }, { status: 400 });
-  const target = findUserById(id);
+  const target = await findUserById(id);
   if (!target) return NextResponse.json({ error: "利用者が見つかりません。" }, { status: 404 });
-  if (target.role === "admin" && listUsers().filter((user) => user.role === "admin").length <= 1) {
+  if (target.role === "admin" && (await listUsers()).filter((user) => user.role === "admin").length <= 1) {
     return NextResponse.json({ error: "最後の管理者は削除できません。" }, { status: 400 });
   }
-  deleteUser(id);
+  await deleteUser(id);
   return NextResponse.json({ ok: true });
 }

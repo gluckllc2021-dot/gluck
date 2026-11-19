@@ -42,7 +42,7 @@ export async function checkPassword(password: string, hash: string) {
 export async function establishSession(userId: string) {
   const token = randomBytes(32).toString("hex");
   const expires = Date.now() + WEEK * 1000;
-  createSession(hashToken(token), userId, expires);
+  await createSession(hashToken(token), userId, expires);
   const jar = await cookies();
   jar.set(COOKIE, token, {
     httpOnly: true,
@@ -56,7 +56,7 @@ export async function establishSession(userId: string) {
 export async function clearSession() {
   const jar = await cookies();
   const token = jar.get(COOKIE)?.value;
-  if (token) deleteSession(hashToken(token));
+  if (token) await deleteSession(hashToken(token));
   jar.set(COOKIE, "", { httpOnly: true, sameSite: "lax", secure: secureCookie(), path: "/", maxAge: 0 });
 }
 
@@ -64,7 +64,7 @@ export async function currentUser(): Promise<SessionUser | null> {
   const jar = await cookies();
   const token = jar.get(COOKIE)?.value;
   if (!token) return null;
-  const user = userByToken(hashToken(token));
+  const user = await userByToken(hashToken(token));
   return user ? toSession(user) : null;
 }
 
@@ -79,7 +79,7 @@ export async function requireUser() {
 }
 
 export async function loginWithPassword(email: string, password: string) {
-  const user = findUserByEmail(email.trim());
+  const user = await findUserByEmail(email.trim());
   const dummy = "$2a$10$abcdefghijklmnopqrstuu2bD5mI5Yh0m1rQ0Q0Q0Q0Q0Q0Q0Q0Q";
   const ok = await checkPassword(password, user?.password_hash || dummy);
   if (!user || !ok) return null;
@@ -93,7 +93,7 @@ export async function registerUser(input: { email: string; name: string; passwor
   if (input.name.trim().length < 1 || input.name.trim().length > 40) throw new Error("氏名は1〜40文字にしてください。");
   if (input.password.length < 10) throw new Error("パスワードは10文字以上にしてください。");
   if (!["admin", "editor", "viewer"].includes(input.role)) throw new Error("権限を選択してください。");
-  if (findUserByEmail(email)) throw new Error("このメールアドレスは既に登録されています。");
+  if (await findUserByEmail(email)) throw new Error("このメールアドレスは既に登録されています。");
   const user: UserRow = {
     id: crypto.randomUUID(),
     email,
@@ -102,14 +102,14 @@ export async function registerUser(input: { email: string; name: string; passwor
     password_hash: await hashPassword(input.password),
     created_at: new Date().toISOString(),
   };
-  insertUser(user);
+  await insertUser(user);
   return toSession(user);
 }
 
 export async function changeUser(id: string, patch: { name?: string; role?: Role; password?: string }) {
-  const current = findUserById(id);
+  const current = await findUserById(id);
   if (!current) throw new Error("利用者が見つかりません。");
-  updateUser(id, {
+  await updateUser(id, {
     name: patch.name?.trim(),
     role: patch.role,
     password_hash: patch.password ? await hashPassword(patch.password) : undefined,

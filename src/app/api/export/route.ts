@@ -12,7 +12,7 @@ function csvEscape(value: unknown) {
 export async function GET(req: Request) {
   const auth = await guard(req);
   if ("error" in auth && auth.error) return auth.error;
-  const ledger = getLedger();
+  const ledger = await getLedger();
   if (!ledger) return NextResponse.json({ error: "台帳がありません。" }, { status: 404 });
   const url = new URL(req.url);
   const date = url.searchParams.get("date") || ledger.as;
@@ -24,7 +24,7 @@ export async function GET(req: Request) {
     status: url.searchParams.get("status") || "",
   };
   const kind = url.searchParams.get("kind") === "workers" ? "workers" : "sites";
-  const snap = core(ledger, listEvents(), date);
+  const snap = core(ledger, await listEvents(), date);
   const lines: (string | number)[][] = [];
   if (kind === "sites") {
     lines.push(["現場コード", "現場名", "地域", "担当者", "実人数", "名簿行", "出勤", "休み", "欠勤", "未入力", "移動", "出勤率", "必要人数", "不足", "ステータス"]);

@@ -6,5 +6,5 @@ export async function POST(req: Request) {
   const auth = await guard(req, "admin");
   if ("error" in auth && auth.error) return auth.error;
   await syncAll(true);
-  return NextResponse.json(publicSheets());
+  return NextResponse.json(await publicSheets());
 }

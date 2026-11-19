@@ -11,7 +11,7 @@ export async function POST(req: Request) {
   if (!body?.email || !body.password) {
     return NextResponse.json({ error: "メールアドレスとパスワードを入力してください。" }, { status: 400 });
   }
-  if (!listUsers().length) {
+  if (!(await listUsers()).length) {
     return NextResponse.json({ error: "初期ユーザーが未作成です。サーバーで npm run user:create を実行してください。" }, { status: 503 });
   }
   const user = await loginWithPassword(body.email, body.password);
@@ -20,10 +20,10 @@ export async function POST(req: Request) {
 }
 
 export async function GET() {
-  const users = listUsers();
+  const users = await listUsers();
   return NextResponse.json({
     needsSetup: users.length === 0,
     demo: users.some((user) => user.email.endsWith("@gluck.example")),
-    known: findUserByEmail("admin@gluck.example") ? "admin@gluck.example" : "",
+    known: (await findUserByEmail("admin@gluck.example")) ? "admin@gluck.example" : "",
   });
 }
