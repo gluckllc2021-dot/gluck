@@ -44,6 +44,8 @@ function encodeWorker(worker: ParsedWorker, month: string, pi: number, cap: numb
     mask += "1";
     if (mark.status === "blank") marks += "A";
     else if (mark.status === "move") marks += symbolChar(table, "移動");
+    else if (mark.status === "rest") marks += symbolChar(table, "休み");
+    else if (mark.status === "absent") marks += symbolChar(table, "欠勤");
     else if (mark.value != null) marks += symbolChar(table, String(mark.value === 1 ? 1 : mark.value));
     else marks += symbolChar(table, mark.raw || "1");
   }

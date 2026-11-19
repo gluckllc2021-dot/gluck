@@ -12,8 +12,8 @@ export type TabMapping = {
 };
 
 export type DayMark = {
-  status: "blank" | "attend" | "move";
-  /** 数値の人工。文字出勤（3時間・残業2）は null */
+  status: "blank" | "attend" | "move" | "rest" | "absent";
+  /** 数値の人工。文字出勤（3時間・残業2・夜勤）は 1 または null */
   value: number | null;
   raw: string;
 };
@@ -161,9 +161,12 @@ function workerColumns(header: string[]): WorkerCol[] {
 }
 
 function readMark(raw: string): { mark?: DayMark; skip?: boolean; error?: string } {
-  const text = raw.trim();
+  const text = raw.trim().replace(/^(?:[\s\u3000↓↑→←▼▲▽△▶▷◀◁➡⇦⇨⇔⇒]+)+/, "").trim();
   if (!text) return { mark: { status: "blank", value: null, raw: "" } };
-  if (/^移動/.test(text)) return { mark: { status: "move", value: null, raw: text } };
+  if (/^移動/.test(text)) return { mark: { status: "move", value: null, raw: "移動" } };
+  if (/^(?:休|休み|公休|有給|有休|休暇)$/.test(text)) return { mark: { status: "rest", value: null, raw: "休み" } };
+  if (/^(?:欠|欠勤)$/.test(text)) return { mark: { status: "absent", value: null, raw: "欠勤" } };
+  if (text === "夜勤") return { mark: { status: "attend", value: 1, raw: "1" } };
   if (/^\d{1,2}[:：]\d{2}$/.test(text)) return { skip: true };
   if (/時間|残業/.test(text)) return { mark: { status: "attend", value: null, raw: text } };
   const numeric = Number(text.replace(/,/g, ""));

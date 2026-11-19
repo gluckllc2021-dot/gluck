@@ -59,6 +59,57 @@ describe("シートの読み取り", () => {
   });
 });
 
+describe("休み・欠勤・移動・夜勤", () => {
+  function book(): import("./sheet-parse").Workbook {
+    const header = ["出勤", "青木 蓮", "合計"];
+    const days: [string, string][] = [
+      ["2026.11.2", "休"],
+      ["2026.11.3", "休み"],
+      ["2026.11.4", "公休"],
+      ["2026.11.5", "有給"],
+      ["2026.11.6", "有休"],
+      ["2026.11.7", "休暇"],
+      ["2026.11.8", "欠"],
+      ["2026.11.9", "欠勤"],
+      ["2026.11.10", "↓　移動"],
+      ["2026.11.11", "↓移動"],
+      ["2026.11.12", "夜勤"],
+    ];
+    const rows = [["元請名"], header, ...days.map(([date, mark]) => [date, mark, "0"]), ["出面合計", "1", "1"], ["元請単価", "25000", ""]];
+    return { spreadsheetId: "mock-marks", title: "2026年11月　出面", sheets: [{ title: "ツカサ・フェリー", rows }] };
+  }
+
+  it("休み・欠勤を取り込み、矢印つき移動と夜勤を出勤にする", () => {
+    const parsed = parseWorkbook(book(), [], asOf);
+    assert.equal(parsed.alerts.some((alert) => alert.code === "unreadable"), false);
+    const worker = parsed.projects[0].workers[0];
+    for (const day of ["2026-11-02", "2026-11-03", "2026-11-04", "2026-11-05", "2026-11-06", "2026-11-07"]) {
+      assert.equal(worker.days[day].status, "rest", day);
+      assert.equal(worker.days[day].raw, "休み");
+    }
+    assert.equal(worker.days["2026-11-08"].status, "absent");
+    assert.equal(worker.days["2026-11-09"].raw, "欠勤");
+    assert.equal(worker.days["2026-11-10"].status, "move");
+    assert.equal(worker.days["2026-11-11"].status, "move");
+    assert.equal(worker.days["2026-11-12"].status, "attend");
+    assert.equal(worker.days["2026-11-12"].value, 1);
+
+    const ledger = ledgersFromWorkbook(book(), [], asOf).months.get("2026-11")!;
+    const rest = headcount(core(ledger, [], "2026-11-04").rows);
+    const absent = headcount(core(ledger, [], "2026-11-09").rows);
+    const moved = headcount(core(ledger, [], "2026-11-10").rows);
+    const night = headcount(core(ledger, [], "2026-11-12").rows);
+    assert.equal(rest.rest, 1);
+    assert.equal(rest.attend, 0);
+    assert.equal(absent.absent, 1);
+    assert.equal(absent.attend, 0);
+    assert.equal(moved.move, 1);
+    assert.equal(moved.attend, 0);
+    assert.equal(night.attend, 1);
+    assert.equal(night.manHours, 1);
+  });
+});
+
 describe("台帳への反映と手動訂正", () => {
   it("空欄は休みにせず、同期し直しても訂正を消さない", () => {
     const book = mockNovemberWorkbook();
