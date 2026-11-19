@@ -96,7 +96,7 @@ export function SheetAdmin() {
         <div>
           <p className="brand-kicker">SHEET SYNC</p>
           <h2 className="mt-1 text-xl font-black">スプレッドシート同期</h2>
-          <p className="mt-1 text-sm text-white/65">シートは読むだけです。画面で直した出面は、同期しても上書きしません。</p>
+          <p className="mt-1 text-sm text-white/65">月ごとに別のシートを登録します。過去月は残したまま同期し、画面で直した出面は上書きしません。</p>
         </div>
         <Button className="h-12 bg-[#ff6a00] font-black text-black hover:bg-[#ff8a1f]" disabled={busy} onClick={() => void syncNow()}>
           {busy ? "同期中…" : "今すぐ同期"}

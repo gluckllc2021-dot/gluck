@@ -29,8 +29,10 @@ async function main() {
   }
   const { ledger, events } = buildDemo();
   const existing = listUsers();
-  if (!listSheets().some((sheet) => sheet.spreadsheetId === "mock-2026-11")) {
-    addSheetFromUrl("https://docs.google.com/spreadsheets/d/mock-2026-11/edit", "2026-11");
+  for (const month of ["2026-08", "2026-09", "2026-10", "2026-11"]) {
+    if (!listSheets().some((sheet) => sheet.spreadsheetId === `mock-${month}`)) {
+      addSheetFromUrl(`https://docs.google.com/spreadsheets/d/${`mock-${month}`}/edit`, month);
+    }
   }
   if (force) {
     setMeta("ledger", "null");

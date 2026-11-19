@@ -297,7 +297,7 @@ export function parseWorkbook(book: Workbook, mappings: TabMapping[], asOf: stri
     }
     const asOfMarks = workers.some((worker) => worker.days[asOf]?.status === "attend" || worker.days[asOf]?.status === "move");
     const hasAny = workers.some((worker) => Object.keys(worker.days).length > 0);
-    if (hasAny && !asOfMarks && (!period || (asOf >= period.start && asOf <= period.end))) {
+    if (hasAny && !asOfMarks && asOf.slice(0, 7) === sheetMonth && (!period || (asOf >= period.start && asOf <= period.end))) {
       localAlerts.push({ level: "alert", code: "unfilled", tab, project: projectName, message: `${asOf} は出勤の記入がありません。未入力の現場として確認してください。` });
     }
 

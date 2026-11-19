@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   AlertTriangle,
   BarChart3,
+  TrendingUp,
   Bell,
   Building2,
   ChevronLeft,
@@ -57,6 +58,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
     ["/sites", "現場一覧", List],
     ["/alerts", "アラート", AlertTriangle],
     ["/reports", "実績・レポート", BarChart3],
+    ["/trend", "稼働の推移", TrendingUp],
     ["/settings", "設定", Settings],
   ] as const;
   const admin = path.startsWith("/settings");

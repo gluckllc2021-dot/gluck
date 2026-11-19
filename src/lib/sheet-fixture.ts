@@ -38,6 +38,72 @@ export function mockNovemberWorkbook(): Workbook {
   };
 }
 
+/** 過去月のサンプル。実名は使わない。月ごとに別ブックとして登録する。 */
+export function mockHistoryWorkbook(month: string): Workbook {
+  const [year, monthNumber] = month.split("-");
+  const title = `${year}年${Number(monthNumber)}月　出面`;
+  const plan = HISTORY[month] || defaultHistory();
+  return {
+    spreadsheetId: `mock-${month}`,
+    title,
+    sheets: plan.map((site) => historyTab(month, site.tab, site.people)),
+  };
+}
+
+const HISTORY: Record<string, { tab: string; people: { name: string; from: number; to: number; value?: string }[] }[]> = {
+  "2026-08": [
+    { tab: "ツカサ・フェリー", people: [{ name: "青木 蓮", from: 3, to: 20 }, { name: "森 凪", from: 1, to: 15 }] },
+    { tab: "ルミック・平野", people: [{ name: "星野 樹", from: 1, to: 12 }] },
+    { tab: "北深電設・神奈川", people: [{ name: "水野 海斗", from: 5, to: 22 }] },
+    { tab: "ルミック・青森", people: [{ name: "桜井 杏", from: 1, to: 10 }] },
+  ],
+  "2026-09": [
+    { tab: "ツカサ・フェリー", people: [{ name: "青木 蓮", from: 1, to: 22 }, { name: "黒田 陽菜", from: 1, to: 18 }] },
+    { tab: "ルミック・平野", people: [{ name: "星野 樹", from: 1, to: 20 }, { name: "伊藤 湊", from: 3, to: 16 }] },
+    { tab: "北深電設・神奈川", people: [{ name: "水野 海斗", from: 1, to: 25 }] },
+    { tab: "ルミック・青森", people: [{ name: "桜井 杏", from: 1, to: 14 }, { name: "小林 葵", from: 8, to: 20 }] },
+    { tab: "レックス", people: [{ name: "川口 律", from: 1, to: 15 }, { name: "青葉電設", from: 2, to: 20, value: "2" }] },
+  ],
+  "2026-10": [
+    { tab: "ツカサ・フェリー", people: [{ name: "青木 蓮", from: 1, to: 28 }, { name: "黒田 陽菜", from: 1, to: 19 }, { name: "森 凪", from: 20, to: 31 }] },
+    { tab: "ルミック・平野", people: [{ name: "星野 樹", from: 1, to: 31 }, { name: "伊藤 湊", from: 1, to: 10 }] },
+    { tab: "北深電設・神奈川", people: [{ name: "水野 海斗", from: 1, to: 31 }] },
+    { tab: "ルミック・青森", people: [{ name: "桜井 杏", from: 1, to: 19 }] },
+    { tab: "ルミック・ラピダス", people: [{ name: "相沢（太郎）", from: 1, to: 15 }, { name: "神谷（花）", from: 10, to: 25 }] },
+    { tab: "レックス", people: [{ name: "川口 律", from: 1, to: 12 }, { name: "青葉電設", from: 1, to: 10, value: "2" }] },
+  ],
+};
+
+function defaultHistory() {
+  return [
+    { tab: "ツカサ・フェリー", people: [{ name: "青木 蓮", from: 1, to: 10 }] },
+    { tab: "ルミック・平野", people: [{ name: "星野 樹", from: 2, to: 12 }] },
+  ];
+}
+
+function historyTab(month: string, title: string, people: { name: string; from: number; to: number; value?: string }[]) {
+  const [year, monthNumber] = month.split("-").map(Number);
+  const dim = new Date(Date.UTC(year, monthNumber, 0)).getUTCDate();
+  const header = ["出勤", ...people.map((person) => person.name), "合計"];
+  const rows: string[][] = [["元請名"], header];
+  const totals = people.map(() => 0);
+  for (let day = 1; day <= dim; day++) {
+    const cells = people.map((person, index) => {
+      if (day < person.from || day > person.to) return "";
+      if (person.value === "2" && day % 2 === 1) return "";
+      const value = person.value || "1";
+      totals[index] += Number(value) || 0;
+      return value;
+    });
+    const sum = cells.reduce((total, cell) => total + (Number(cell) || 0), 0);
+    rows.push([`${year}.${monthNumber}.${day}`, ...cells, String(sum)]);
+  }
+  rows.push(["出面合計", ...totals.map(String), String(totals.reduce((total, cell) => total + cell, 0))]);
+  rows.push(["元請単価", ...people.map(() => "25000"), ""]);
+  rows.push(["高速 電車賃"]);
+  return { title, rows };
+}
+
 function filled(from: number, to: number, value: string) {
   const days: Record<number, string> = {};
   for (let day = from; day <= to; day++) days[day] = value;

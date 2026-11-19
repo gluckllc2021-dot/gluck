@@ -219,6 +219,20 @@ export function setSyncIntervalMinutes(minutes: number) {
   setMeta("syncIntervalMinutes", String(minutes));
 }
 
+export function listMonthLedgers(year?: string): { month: string; ledger: Ledger }[] {
+  const rows = database().prepare("SELECT key, value FROM meta WHERE key LIKE 'ledger:%'").all() as { key: string; value: string }[];
+  const found: { month: string; ledger: Ledger }[] = [];
+  for (const item of rows) {
+    const month = item.key.slice("ledger:".length);
+    if (!/^\d{4}-\d{2}$/.test(month)) continue;
+    if (year && !month.startsWith(year)) continue;
+    if (!item.value || item.value === "null") continue;
+    found.push({ month, ledger: JSON.parse(item.value) as Ledger });
+  }
+  found.sort((a, b) => a.month.localeCompare(b.month));
+  return found;
+}
+
 export function getLedgerForDate(date: string): Ledger | null {
   const month = date.slice(0, 7);
   const raw = getMeta(`ledger:${month}`);

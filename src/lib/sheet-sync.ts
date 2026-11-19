@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { mockNovemberWorkbook } from "./sheet-fixture";
+import { mockHistoryWorkbook, mockNovemberWorkbook } from "./sheet-fixture";
 import { ledgersFromWorkbook } from "./sheet-merge";
 import { parseWorkbook, spreadsheetIdFromUrl, type SheetGrid, type TabMapping, type Workbook } from "./sheet-parse";
 import {
@@ -26,6 +26,9 @@ export function accountConfigured() {
 }
 
 export async function loadWorkbook(spreadsheetId: string): Promise<Workbook> {
+  if (spreadsheetId === "mock-2026-11") return mockNovemberWorkbook();
+  const history = /^mock-(\d{4}-\d{2})$/.exec(spreadsheetId);
+  if (history && history[1] !== "2026-11") return mockHistoryWorkbook(history[1]);
   if (spreadsheetId.startsWith("mock-") || process.env.SHEET_SOURCE === "mock") return mockNovemberWorkbook();
   const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
   if (!raw) {
