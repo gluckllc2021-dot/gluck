@@ -13,6 +13,10 @@ const users = [
 ] as const;
 
 async function main() {
+  if (process.env.NODE_ENV === "production" && !process.argv.includes("--allow-demo")) {
+    console.error("本番ではデモ用のアカウントとダミーデータは入れません。");
+    process.exit(1);
+  }
   const force = process.argv.includes("--force");
   for (const [email, name, role] of users) {
     if (!(await findUserByEmail(email))) {

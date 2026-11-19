@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p ${PORT:-43123}",
     "lint": "eslint",
-    "test": "tsx --test src/lib/attendance.test.ts src/lib/sheet-parse.test.ts src/lib/activity.test.ts src/lib/day-view.test.ts src/lib/cron-auth.test.ts",
+    "test": "tsx --test src/lib/attendance.test.ts src/lib/sheet-parse.test.ts src/lib/activity.test.ts src/lib/day-view.test.ts src/lib/cron-auth.test.ts src/lib/initial-admin.test.ts",
     "seed": "tsx scripts/seed.ts",
     "user:create": "tsx scripts/create-user.ts"
   },

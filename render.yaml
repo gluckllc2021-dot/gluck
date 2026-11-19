@@ -19,5 +19,9 @@ services:
         sync: false
       - key: CRON_SECRET
         sync: false
+      - key: INITIAL_ADMIN_EMAIL
+        sync: false
+      - key: INITIAL_ADMIN_PASSWORD
+        sync: false
       - key: GOOGLE_SERVICE_ACCOUNT_JSON
         sync: false
