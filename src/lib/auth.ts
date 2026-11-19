@@ -26,6 +26,7 @@ function hashToken(token: string) {
 }
 
 function secureCookie() {
+  if (process.env.COOKIE_SECURE === "1") return true;
   if (process.env.COOKIE_SECURE === "0") return false;
   return process.env.NODE_ENV === "production";
 }
